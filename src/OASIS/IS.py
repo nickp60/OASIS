@@ -13,8 +13,8 @@ SeqRecords."""
 from Bio import SeqIO
 from Bio import SeqRecord
 
-from OASIS_functions import *
-from Constants import *
+from .OASIS_functions import *
+from .Constants import *
 
 ### PARAMETERS ###
 

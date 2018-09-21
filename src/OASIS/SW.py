@@ -1,5 +1,6 @@
-def zeros((dim1, dim2)):
+def zeros(xxx_todo_changeme):
     """return a 2D array of zeroes with the given dimensions"""
+    (dim1, dim2) = xxx_todo_changeme
     return [[0 for i in range(dim2)] for j in range(dim1)]
 
 

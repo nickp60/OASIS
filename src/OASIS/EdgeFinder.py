@@ -12,8 +12,9 @@ import math
 
 from Bio import Seq
 
-from OASIS_functions import *
-from Constants import *
+from .OASIS_functions import *
+from .Constants import *
+from functools import reduce
 
 ### FIXED PARAMETERS ###
 # distribution of nucleotides if there is no conservation
@@ -43,7 +44,7 @@ def factorial(n):
     if n in REMEMBERED_FACTORIALS:
         return REMEMBERED_FACTORIALS[n]
     result = 1
-    for i in xrange(1, abs(n)+1):
+    for i in range(1, abs(n)+1):
         result *= i
     if n < 0:
         result = -result
@@ -134,7 +135,7 @@ def log_likelihood_unconserved(data):
 def combine_likelihoods(conserved_likelihoods, unconserved_likelihoods):
     conserved_region_l = cumulative_sum(conserved_likelihoods)
     unconserved_region_l = cumulative_sum(unconserved_likelihoods[::-1])[::-1]
-    return map(sum, zip(conserved_region_l, unconserved_region_l))
+    return list(map(sum, list(zip(conserved_region_l, unconserved_region_l))))
 
 def find_left_edges(seqs, individual=True, verbose=False):
     """given a list of aligned Seq objects, find the index of the edge
@@ -157,8 +158,8 @@ def find_left_edges(seqs, individual=True, verbose=False):
     # this is the product of the likelihoods that it is conserved up to the
     # nth element and that it is not conserved from the nth element onward
 
-    conserved_l = map(log_likelihood_conserved, dists)
-    unconserved_l = map(log_likelihood_unconserved, dists)
+    conserved_l = list(map(log_likelihood_conserved, dists))
+    unconserved_l = list(map(log_likelihood_unconserved, dists))
 
     likelihoods = combine_likelihoods(conserved_l, unconserved_l)
     best_k = whichmax(likelihoods)
@@ -166,14 +167,14 @@ def find_left_edges(seqs, individual=True, verbose=False):
     revcmp = lambda s: str(Seq.Seq(s).reverse_complement())
 
     if verbose:
-        print "\n".join([revcmp(s[:best_k+100]) for s in seqs])
-        print "\n".join([" " * 100 + revcmp(s[:best_k]) for s in seqs])
-        print best_k
+        print("\n".join([revcmp(s[:best_k+100]) for s in seqs]))
+        print("\n".join([" " * 100 + revcmp(s[:best_k]) for s in seqs]))
+        print(best_k)
 
     if len(seqs) < 3 or not individual:
         return [best_k] * len(seqs)
 
-    modes = map(mode_nucs, dists[:best_k])
+    modes = list(map(mode_nucs, dists[:best_k]))
 
     individual_limits = []
     for s in seqs:

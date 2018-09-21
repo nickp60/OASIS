@@ -16,10 +16,10 @@ from Bio import Seq
 from Bio import SeqIO
 from Bio.Alphabet import IUPAC
 
-from OASIS_functions import *
-from Constants import *
-from SW import myalign
-import my_SW
+from .OASIS_functions import *
+from .Constants import *
+from .SW import myalign
+from . import my_SW
 
 #set up parameters
 nucs = ["A", "G", "C", "T"]
@@ -133,7 +133,7 @@ def similar(set1, set2, verbose=False):
         all_indices = all_indices + indices
 
         if verbose:
-            print [e for e in indices if e > MAX_OVERLAP]
+            print([e for e in indices if e > MAX_OVERLAP])
 
         overlaps = overlaps + len([e for e in indices if e > MAX_OVERLAP])
 
@@ -154,7 +154,7 @@ def similar(set1, set2, verbose=False):
     #is_similar = (float(similar_count) / float(len(full_list1)) > .1) or \
 
     if verbose:
-        print overlaps
+        print(overlaps)
 
     fraction_similar = 10
 

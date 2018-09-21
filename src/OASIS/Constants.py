@@ -8,18 +8,18 @@ Contains constants for OASIS program"""
 
 ## BLAST executables
 import os
-import ConfigParser
+import shutil
+# import configparser
 
-config_file = os.path.join(os.path.split(__file__)[0], "data", "data.cfg")
-config_parser = ConfigParser.ConfigParser()
-config_parser.read(config_file)
+# config_file = os.path.join(os.path.split(__file__)[0], "data", "data.cfg")
+# config_parser = configparser.ConfigParser()
+# config_parser.read(config_file)
 
-BLAST_EXE = config_parser.get("BLAST", "BLAST_EXE")
-FORMAT_EXE = config_parser.get("BLAST", "FORMAT_EXE")
+BLAST_EXE = shutil.which("blastall")
+FORMAT_EXE = shutil.which("formatdb")
 
-if BLAST_EXE.startswith("/PATH/TO") or FORMAT_EXE.startswith("/PATH/TO"):
-    raise Exception("Must set full path to NCBI blastall executable in " +
-                    config_file)
+if BLAST_EXE is None or FORMAT_EXE is None:
+    raise Exception("legacy blast must be installed")
 
 ISFINDER_AA_FILE = "ISFinder_aa.fasta"
 

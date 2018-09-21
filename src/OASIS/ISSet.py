@@ -11,10 +11,10 @@ import os
 
 from Bio import SeqRecord
 
-import IS
-import EdgeFinder
-from OASIS_functions import *
-from Constants import *
+from . import IS
+from . import EdgeFinder
+from .OASIS_functions import *
+from .Constants import *
 
 class ISSet:
     """represents a set of IS matches that are one type"""
@@ -39,9 +39,9 @@ class ISSet:
 
         # unzip
         if from_edges:
-            [befores, afters] = zip(*[e.around_IS(window) for e in self.lst])
+            [befores, afters] = list(zip(*[e.around_IS(window) for e in self.lst]))
         else:
-            [befores, afters] = zip(*[e.around_gene(window) for e in self.lst])
+            [befores, afters] = list(zip(*[e.around_gene(window) for e in self.lst]))
 
         # make them the same length
         minlength_before = min([len(b) for b in befores])
@@ -102,8 +102,9 @@ class ISSet:
                 choices = [e for e in choices if e.IRL and len(e.IRL) > 8]
                 break
         lens = [e.length for e in choices]
-        lsorted = list(set(lens))
-        lsorted.sort(lambda a, b: cmp(lens.count(b), lens.count(a)))
+        print(lens)
+        lsorted = sorted(list(set(lens)))
+        # lsorted.sort(lambda a, b: cmp(lens.count(b), lens.count(a)))
         return choices[lens.index(lsorted[0])]
 
     def remove_redundant(self, genome):

@@ -11,19 +11,20 @@ SeqRecords."""
 
 #imports
 import os
+import sys
 import glob
-
+import subprocess
 from Bio import Seq
 from Bio import SeqIO
-from Bio.Blast import NCBIStandalone
-from Bio.Blast import NCBIXML
+# from Bio.Blast import NCBIStandalone
+# from Bio.Blast import NCBIXML
 
-import ISSet
-import IS
-import Profile
-from OASIS_functions import *
-from Constants import *
-from SW import myalign
+from . import ISSet
+from . import IS
+from . import Profile
+from .OASIS_functions import *
+from .Constants import *
+from .SW import myalign
 
 #classes
 class AnnotatedGenome:
@@ -59,6 +60,7 @@ class AnnotatedGenome:
         if data_folder == None:
             data_folder = os.path.join(os.path.split(__file__)[0], "data")
         aafile = os.path.join(data_folder, ISFINDER_AA_FILE)
+        print("using " + aafile + "as ISFinder db")
         #self.profile = Profile.Profile(aafile)
         self.profile = None
 
@@ -71,7 +73,7 @@ class AnnotatedGenome:
             for f in thislist:
                 self.namedict[f.qualifiers['locus_tag'][0]] = seq_record.id
             if annotated:
-                self.candidates += filter(related, thislist)
+                self.candidates += list(filter(related, thislist))
             else:
                 self.candidates += thislist
 
@@ -140,7 +142,7 @@ class AnnotatedGenome:
                 j = j + 1
             i = i + 1
 
-        self.annotations = [a for a, i in zip(self.annotations, range(n)) if i not in marked]
+        self.annotations = [a for a, i in zip(self.annotations, list(range(n))) if i not in marked]
 
     def write_annotations(self, outfilename, folder=None):
         """given an output file, write the annotations out to a text file and
@@ -161,7 +163,7 @@ class AnnotatedGenome:
         self.write_fasta(outfile)
 
         # print confirmation
-        print "Completed", outfile
+        print("Completed", outfile)
 
     def write_txt(self, outfile):
         """write annotations as a gff file"""
@@ -267,9 +269,19 @@ class AnnotatedGenome:
         self.annotations = []
 
         #perform a blast
-        result_handle, error_handle = NCBIStandalone.blastall(BLAST_EXE,
-                                        "blastn", blast_db, blast_file)
-        blast_records = NCBIXML.parse(result_handle)
+        blast_cmd = "{exe} -p blastn -d {db} -i {query}".format(
+            exe=BLAST_EXE, db=blast_db, query=blast_file)
+        blast_result = subprocess.run(blast_cmd,
+                                 shell=sys.platform != "win32",
+                                 stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE,
+                                 check=True)
+        print(blast_result)
+        print(blast_result.decode("utf-8"))
+        result_handle, error_handle = None, None
+        # result_handle, error_handle = NCBIStandalone.blastall(BLAST_EXE,
+        #                                 "blastn", blast_db, blast_file)
+        # blast_records = NCBIXML.parse(result_handle)
 
         #iterate over the results and the directions of the queries
         for record, sample_direction in zip(blast_records, directions):
@@ -316,7 +328,7 @@ class AnnotatedGenome:
 
     def as_records(self):
         """return this genome as a list of SeqRecord objects"""
-        return self.seqdict.values()
+        return list(self.seqdict.values())
 
     def get_feature(self, chromosome, start, end):
         """given a chromosome, a start, and an end, return a feature in that

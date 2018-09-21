@@ -8,15 +8,15 @@ Represents a profile of ISFinder IS families"""
 import os
 import re
 import shutil
-
+import subprocess
 from Bio import SeqRecord
-from Bio.Blast import NCBIStandalone
-from Bio.Blast import NCBIXML
+# from Bio.Blast import NCBIStandalone
+# from Bio.Blast import NCBIXML
 from Bio import SeqIO
 
-from OASIS_functions import *
-from Constants import *
-import my_SW
+from .OASIS_functions import *
+from .Constants import *
+from . import my_SW
 
 #classes
 
@@ -44,13 +44,20 @@ class Profile:
         SeqIO.write([temp_record], outf, "fasta")
         outf.close()
 
-        result_handle, error_handle = NCBIStandalone.blastall(BLAST_EXE,
-                                        "blastp", self.tpase_file, blast_file)
+        blast_cmd = "{exe} -p blastn -d {db} -i {query}".format(
+            exe=BLAST_EXE, db=blast_db, query=blast_file)
+        blast_result = subprocess.run(blast_cmd,
+                                 shell=sys.platform != "win32",
+                                 stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE,
+                                 check=True)
+        # result_handle, error_handle = NCBIStandalone.blastall(BLAST_EXE,
+        #                                 "blastp", self.tpase_file, blast_file)
 
-        try:
-            record = NCBIXML.parse(result_handle).next()
-        except ValueError:
-            raise Exception("BLAST Exception: " + error_handle.read())
+        # try:
+        #     record = next(NCBIXML.parse(result_handle))
+        # except ValueError:
+        #     raise Exception("BLAST Exception: " + error_handle.read())
 
         best_hsp = None
         best_alignment = None
@@ -80,5 +87,3 @@ class Profile:
         os.remove(blast_file)
 
         return family, group
-
-
