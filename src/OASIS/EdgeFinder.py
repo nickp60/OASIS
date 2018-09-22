@@ -18,7 +18,7 @@ from functools import reduce
 
 ### FIXED PARAMETERS ###
 # distribution of nucleotides if there is no conservation
-nucs = ["A", "G", "C", "T"]
+nucs = list("AGCTNURYKMSWBDHVN")
 
 NULL_DISTRIBUTION = dict([(n, .25) for n in nucs])
 
@@ -197,4 +197,3 @@ def find_right_edges(seqs, individual=True, verbose=False):
     backwards_seqs = [s[::-1] for s in seqs]
     return [len(seqs[0]) - e
                 for e in find_left_edges(backwards_seqs, individual, verbose)]
-

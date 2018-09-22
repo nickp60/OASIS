@@ -44,20 +44,18 @@ class Profile:
         SeqIO.write([temp_record], outf, "fasta")
         outf.close()
 
-        blast_cmd = "{exe} -p blastn -d {db} -i {query}".format(
+        blast_cmd = "{exe} -p blastn -d {db} -i {query} -m 7".format(
             exe=BLAST_EXE, db=blast_db, query=blast_file)
-        blast_result = subprocess.run(blast_cmd,
-                                 shell=sys.platform != "win32",
-                                 stdout=subprocess.PIPE,
-                                 stderr=subprocess.PIPE,
-                                 check=True)
-        # result_handle, error_handle = NCBIStandalone.blastall(BLAST_EXE,
-        #                                 "blastp", self.tpase_file, blast_file)
+        result_handle = subprocess.run(blast_cmd,
+                                       shell=sys.platform != "win32",
+                                       stdout=subprocess.PIPE,
+                                       stderr=subprocess.PIPE,
+                                       check=True)
 
-        # try:
-        #     record = next(NCBIXML.parse(result_handle))
-        # except ValueError:
-        #     raise Exception("BLAST Exception: " + error_handle.read())
+        try:
+            record = next(NCBIXML.parse(result_handle))
+        except ValueError:
+            raise Exception("BLAST Error")
 
         best_hsp = None
         best_alignment = None

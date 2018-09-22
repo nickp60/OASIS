@@ -17,8 +17,7 @@ import subprocess
 from Bio import Seq
 from Bio import SeqIO
 # from Bio.Blast import NCBIStandalone
-# from Bio.Blast import NCBIXML
-
+from Bio.Blast import NCBIXML
 from . import ISSet
 from . import IS
 from . import Profile
@@ -114,6 +113,7 @@ class AnnotatedGenome:
     def clean_up(self):
         """perform the necessary changes- clean edges, add IRs, filter,
         BLAST, find partials and singles, etc."""
+
         [is_set.re_annotate() for is_set in self.annotations]
         self.annotations = [is_set for is_set in self.annotations if is_set.filter()]
         #[is_set.clean_edges() for is_set in self.annotations]
@@ -260,6 +260,7 @@ class AnnotatedGenome:
 
         #write a temporary IS fasta file
         blast_file = os.path.join(TEMPORARY_DIRECTORY, "OASIS_temp_IS.fasta")
+        blast_results_file = os.path.join(TEMPORARY_DIRECTORY, "OASIS_temp_IS_results.xml")
         self.__write_singles(blast_file)
 
         #get the directions of these sample IS's
@@ -269,36 +270,37 @@ class AnnotatedGenome:
         self.annotations = []
 
         #perform a blast
-        blast_cmd = "{exe} -p blastn -d {db} -i {query}".format(
-            exe=BLAST_EXE, db=blast_db, query=blast_file)
-        blast_result = subprocess.run(blast_cmd,
-                                 shell=sys.platform != "win32",
-                                 stdout=subprocess.PIPE,
-                                 stderr=subprocess.PIPE,
-                                 check=True)
-        print(blast_result)
-        print(blast_result.decode("utf-8"))
-        result_handle, error_handle = None, None
+        blast_cmd = "{exe} -p blastn -d {db} -i {query} -m 7 -o {outf}".format(
+            exe=BLAST_EXE, db=blast_db, query=blast_file, outf=blast_results_file)
+        result_handle = subprocess.run(blast_cmd,
+                                      shell=sys.platform != "win32",
+                                      stdout=subprocess.PIPE,
+                                      stderr=subprocess.PIPE,
+                                      check=True)
+
+        error_handle = None
         # result_handle, error_handle = NCBIStandalone.blastall(BLAST_EXE,
         #                                 "blastn", blast_db, blast_file)
-        # blast_records = NCBIXML.parse(result_handle)
-
+        # blast_records = NCBIXML.parse(open(blast_results_file))
+        # for r in blast_records:
+        #     print(r)
         #iterate over the results and the directions of the queries
-        for record, sample_direction in zip(blast_records, directions):
-            ISlist = []
-            for alignment in record.alignments:
-                for hsp in alignment.hsps:
-                    if hsp.expect < E_VALUE_CUTOFF and len(hsp.sbjct) >= MIN_PARTIAL_LEN and \
-                        len(hsp.sbjct) > minimum_blast_length:
-                        chromosome = alignment.title.split(" ")[1]
-                        start = hsp.sbjct_start-1
-                        end = start + len(hsp.sbjct)
-                        #find out what the gene is
-                        f = self.get_feature(chromosome, start, end)
-                        thisdir = hsp.frame[1] * sample_direction
-                        ISlist.append(IS.IS(f, chromosome, start, end, self, dir=thisdir))
-            if len(ISlist) > 0:
-                self.annotations.append(ISSet.ISSet(ISlist, self.profile))
+        with open(blast_results_file, "r") as blast_f:
+            for record, sample_direction in zip(NCBIXML.parse(blast_f), directions):
+                ISlist = []
+                for alignment in record.alignments:
+                    for hsp in alignment.hsps:
+                        if hsp.expect < E_VALUE_CUTOFF and len(hsp.sbjct) >= MIN_PARTIAL_LEN and \
+                           len(hsp.sbjct) > minimum_blast_length:
+                            chromosome = alignment.title.split(" ")[1]
+                            start = hsp.sbjct_start-1
+                            end = start + len(hsp.sbjct)
+                            #find out what the gene is
+                            f = self.get_feature(chromosome, start, end)
+                            thisdir = hsp.frame[1] * sample_direction
+                            ISlist.append(IS.IS(f, chromosome, start, end, self, dir=thisdir))
+                if len(ISlist) > 0:
+                    self.annotations.append(ISSet.ISSet(ISlist, self.profile))
 
         #clean up- remove the temporary files
         os.remove(blast_db)
