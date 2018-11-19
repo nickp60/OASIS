@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 # from distutils.core import setup
 setup(
     name="OASIS",
@@ -6,12 +6,11 @@ setup(
     author_email="dgrtwo@princeton.edu",
     description="Optimized Annotation System for Insertion Sequences",
     version="1.0",
-    packages=["OASIS"],
-    package_dir={"OASIS": "src/OASIS"},
+    packages=find_packages(),
     package_data={"OASIS": ["data/*"]},
     entry_points={
         'console_scripts': [
-            'OASIS=src.OASIS_main:main',
+            'OASIS=OASIS.OASIS_main:main',
         ],
     },
 )
