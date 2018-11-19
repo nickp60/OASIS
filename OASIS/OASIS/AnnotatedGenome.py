@@ -59,8 +59,8 @@ class AnnotatedGenome:
         if data_folder == None:
             data_folder = os.path.join(os.path.split(__file__)[0], "data")
         aafile = os.path.join(data_folder, ISFINDER_AA_FILE)
-        print("using " + aafile + "as ISFinder db")
-        #self.profile = Profile.Profile(aafile)
+        print("using " + aafile + " as ISFinder db")
+        self.profile = Profile.Profile(aafile)
         self.profile = None
 
         self.all_features = []

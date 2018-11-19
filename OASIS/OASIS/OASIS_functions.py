@@ -16,7 +16,6 @@ from Bio import Seq
 from Bio import SeqIO
 from Bio.Alphabet import IUPAC
 
-from .OASIS_functions import *
 from .Constants import *
 from .SW import myalign
 from . import my_SW
