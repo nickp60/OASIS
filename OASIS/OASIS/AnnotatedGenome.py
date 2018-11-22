@@ -60,8 +60,19 @@ class AnnotatedGenome:
             data_folder = os.path.join(os.path.split(__file__)[0], "data")
         aafile = os.path.join(data_folder, ISFINDER_AA_FILE)
         print("using " + aafile + " as ISFinder db")
+        print("checking db")
+        checked_db = aafile.replace(".fasta", "_new.fasta")
+        with open(aafile, "r") as inf, open(checked_db, "w") as outf:
+            for rec in SeqIO.parse(aafile, "fasta"):
+                if len(rec) > 1:
+                    # write out AA version
+                    new_rec = rec
+                    new_rec.seq = rec.seq.translate()
+                    SeqIO.write(new_rec, outf, "fasta")
+        aafile = checked_db
+        print("using " + aafile + " as ISFinder db")
         self.profile = Profile.Profile(aafile)
-        self.profile = None
+        #self.profile = None
 
         self.all_features = []
 
@@ -290,6 +301,10 @@ class AnnotatedGenome:
                 ISlist = []
                 for alignment in record.alignments:
                     for hsp in alignment.hsps:
+                        print(alignment)
+                        print()
+                        print(hsp)
+                        sys.exit()
                         if hsp.expect < E_VALUE_CUTOFF and len(hsp.sbjct) >= MIN_PARTIAL_LEN and \
                            len(hsp.sbjct) > minimum_blast_length:
                             chromosome = alignment.title.split(" ")[1]
@@ -301,6 +316,7 @@ class AnnotatedGenome:
                             ISlist.append(IS.IS(f, chromosome, start, end, self, dir=thisdir))
                 if len(ISlist) > 0:
                     self.annotations.append(ISSet.ISSet(ISlist, self.profile))
+
 
         #clean up- remove the temporary files
         os.remove(blast_db)
@@ -446,8 +462,8 @@ class AnnotatedGenome:
 
         #IR_result = find_IR_large_window(before, after.reverse_complement())
 
-        #family, group = self.profile.identify_family(seq)
-        IR_result = find_IRs(None, before, after, SINGLE_IR_IN_WINDOW)
+        family, group = self.profile.identify_family(seq)
+        IR_result = find_IRs(family, before, after, SINGLE_IR_IN_WINDOW)
 
         if IR_result:
             IR1, IR2 = IR_result
@@ -465,7 +481,7 @@ class AnnotatedGenome:
 
             newstart = start - SINGLE_IR_OUT_WINDOW + pos1
             newend = start - SINGLE_IR_OUT_WINDOW + pos2 + len(IR2)
-            newIS = IS.IS(c, chromname, newstart, newend, self)
+            newIS = IS.IS(c, chromname, newstart, newend, self, family=family, group=group)
             if newIS.length < MINLENGTH: return False
             return newIS
 
